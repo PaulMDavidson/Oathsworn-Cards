@@ -1,3 +1,5 @@
+const ws = new WebSocket('ws://192.168.1.11:8081');
+
 const drawStacksY = 4;
 const drawStacksX = 4;
 const drawStacksYsep = 16;
@@ -21,6 +23,10 @@ let cardsRevealed = false;
 const cardFill = ['white', 'yellow', 'red', 'black'];
 const textFill = ['black', 'black', 'black', 'white'];
 
+const peerId = 'cardsapp-da212e35b0b0';
+var peer;
+var conn;
+
 function resetDeck(colour) {
   switch (colour) {
     case whiteCards:
@@ -40,8 +46,13 @@ function resetDeck(colour) {
   discards[colour] = [];
 }
 
+function xscaled(x) { return x * windowWidth / 100; }
+function yscaled(y) { return y * windowHeight / 100; }
+
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  let canvas = createCanvas(windowWidth, windowHeight);
+  canvas.position(0, 0);
+
   angleMode(DEGREES);
   strokeWeight(0.15);
   stroke(96, 64, 128);
@@ -52,6 +63,73 @@ function setup() {
   resetDeck(yellowCards);
   resetDeck(redCards);
   resetDeck(blackCards);
+
+  b1 = createButton('Draw');
+  b1.position(xscaled(6 * drawStacksXsep + drawStacksX), yscaled(drawStacksY + 0 * drawStacksYsep));
+  b1.size(xscaled(drawStacksXsep * 0.8), yscaled(drawStacksYsep * 0.7));
+  b1.style('background-color: white');
+  b1.mouseClicked(pickWhiteCard);
+  b2 = createButton('Draw');
+  b2.position(xscaled(6 * drawStacksXsep + drawStacksX), yscaled(drawStacksY + 1 * drawStacksYsep));
+  b2.size(xscaled(drawStacksXsep * 0.8), yscaled(drawStacksYsep * 0.7));
+  b2.style('background-color: yellow');
+  b2.mouseClicked(pickYellowCard);
+  b3 = createButton('Draw');
+  b3.position(xscaled(6 * drawStacksXsep + drawStacksX), yscaled(drawStacksY + 2 * drawStacksYsep));
+  b3.size(xscaled(drawStacksXsep * 0.8), yscaled(drawStacksYsep * 0.7));
+  b3.style('background-color: red');
+  b3.mouseClicked(pickRedCard);
+  b4 = createButton('Draw');
+  b4.position(xscaled(6 * drawStacksXsep + drawStacksX), yscaled(drawStacksY + 3 * drawStacksYsep));
+  b4.size(xscaled(drawStacksXsep * 0.8), yscaled(drawStacksYsep * 0.7));
+  b4.style('background-color: black');
+  b4.style('color: white');
+  b4.mouseClicked(pickBlackCard);
+  revealButton = createButton('Reveal');
+  revealButton.position(xscaled(6 * drawStacksXsep + drawStacksX), yscaled(drawStacksY + 4 * drawStacksYsep));
+  revealButton.size(xscaled(drawStacksXsep * 0.8), yscaled(drawStacksYsep * 0.7));
+  revealButton.style('background-color: white');
+  revealButton.mouseClicked(revealCards);
+  revealButton.attribute('disabled', 'true');
+  discardButton = createButton('Discard');
+  discardButton.position(xscaled(7 * drawStacksXsep + drawStacksX), yscaled(drawStacksY + 4 * drawStacksYsep));
+  discardButton.size(xscaled(drawStacksXsep * 0.8), yscaled(drawStacksYsep * 0.7));
+  discardButton.style('background-color: white');
+  discardButton.mouseClicked(discardCards);
+  discardButton.attribute('disabled', 'true');
+
+  ws.onopen = () => {
+    console.log(`Connected`);
+    ws.send('Hello Server!');
+  };
+
+  ws.onmessage = (event) => {
+    console.log(`Received: ${event.data}`);
+    handleMessage(event.data);
+  };
+
+  ws.onclose = () => {
+    console.log(`Disconnected`);
+  };
+
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+  };
+
+  //axios = require('axios');
+  axios.get('https://raw.githubusercontent.com/PaulMDavidson/server-id/refs/heads/main/id')
+    .then(function (response) {
+      // handle success
+      console.log(response);
+    })
+    .catch(function (error) {
+      // handle error
+      console.log(error);
+    })
+    .finally(function () {
+      // always executed
+    });
+
 }
 
 function draw() {
@@ -61,7 +139,6 @@ function draw() {
   background(220);
 
   for (let colour = 0; colour < 4; colour++) {
-
     let slots_taken = [0, 0, 0, 0, 0, 0];
     cards[colour].forEach((card, index) => {
       let slot = floor(cardnum[colour][index] / 3);
@@ -80,7 +157,7 @@ function draw() {
     });
     fill('black');
     // Count how many cards of this colour in discard
-    text(discards.filter((discard) => discard[0] == colour).length, drawStacksXsep * 6 + drawStacksX, drawStacksY + colour * drawStacksYsep, 10, 8);
+    text(discards.filter((discard) => discard[0] == colour).length, drawStacksXsep * 7 + drawStacksX, drawStacksY + colour * drawStacksYsep, 10, 8);
   }
 
   line(2, drawnStackY - 2, 98, drawnStackY - 2);
@@ -111,8 +188,8 @@ function draw() {
       });
     });
     fill('black');
-    text(drawTotal, drawStacksXsep * 6 + drawStacksX, drawnStackY - 2, 10, 8);
-    if (miss_count >= 2) text('(FAIL)', drawStacksXsep * 6 + drawStacksX, drawnStackY + 4, 10, 8);
+    text(drawTotal, drawStacksXsep * 6 + drawStacksX, drawnStackY + drawnStackYsep, 10, 8);
+    if (miss_count >= 2) text('Miss', drawStacksXsep * 7 + drawStacksX, drawnStackY + drawnStackYsep, 10, 8);
   } else {
     cardsPicked.forEach((colour, index) => {
       c = color(cardFill[colour]);
@@ -123,7 +200,7 @@ function draw() {
       rect(x, y, 10, 8, 1, 1, 1, 1);
       textSize(2);
       fill(textFill[colour]);
-      text('click to remove', x, y, 10, 8);
+      text('Remove', x, y, 10, 8);
       textSize(5);
     });
   }
@@ -143,6 +220,7 @@ function windowResized() {
 function pickCard(colour) {
   console.log(' pick ' + colour + ' of ' + cards[colour].length);
   cardsPicked.push(colour);
+  revealButton.removeAttribute('disabled');
 }
 
 function drawCard(colour, baseCard) {
@@ -159,6 +237,28 @@ function drawCard(colour, baseCard) {
     cards[colour].splice(cardIndex, 1);
     cardnum[colour].splice(cardIndex, 1);
   }
+}
+
+function revealCards() {
+  cardsPicked.forEach((colour, index) => {
+    drawCard(colour, cardsDrawn.length);
+  });
+  cardsPicked.length = 0;
+  cardsRevealed = true;
+  revealButton.attribute('disabled', 'true');
+  discardButton.removeAttribute('disabled');
+}
+
+function discardCards() {
+  // Discard all drawn cards
+  cardsDrawn.forEach((critStack) => {
+    console.log('discards ' + critStack)
+    discards.push(...critStack);
+  });
+  cardsDrawn.length = 0;
+  cardsRevealed = false;
+  revealButton.attribute('disabled', 'true');
+  discardButton.attribute('disabled', 'true');
 }
 
 var mousePressTime;
@@ -189,14 +289,6 @@ function shuffleIn(colour) {
   discards.length = j;
 }
 
-function revealCards() {
-  cardsPicked.forEach((colour, index) => {
-    drawCard(colour, cardsDrawn.length);
-  });
-  cardsPicked.length = 0;
-  cardsRevealed = true;
-}
-
 function longClick() {
   var clickX = mouseX / windowWidth * 100;
   var clickY = mouseY / windowHeight * 100;
@@ -210,17 +302,10 @@ function longClick() {
           colour = cardsDrawn[drawnCard][0];
         }
       } else {
-        // Discard all drawn cards
-        cardsDrawn.forEach((critStack) => {
-          console.log('discards ' + critStack)
-          discards.push(...critStack);
-        });
-        cardsDrawn.length = 0;
-        cardsRevealed = false;
       }
     } else {
       // Reveal picked cards
-      revealCards();
+      //revealCards();
     }
   } else if (clickX > drawStacksX + drawStacksXsep * 6) {
     // Shuffle discards back
@@ -235,7 +320,7 @@ function drawCardClick() {
   var clickY = mouseY / windowHeight * 100;
   let colourDrawn = floor((clickY - drawStacksY) / drawStacksYsep);
   if ((colourDrawn >= 0) && (colourDrawn <= 3) && (!cardsRevealed)) {
-    pickCard(colourDrawn);
+    //pickCard(colourDrawn);
   } else if (colourDrawn > 3) {
     if (clickX < drawStacksX + drawStacksXsep * 6) {
       drawnCard = floor((clickX - drawStacksX) / drawStacksXsep) + (floor((clickY - drawnStackY) / drawnStackYsep) * 6);
@@ -250,8 +335,41 @@ function drawCardClick() {
       } else {
         if ((drawnCard >= 0) && (drawnCard < cardsPicked.length)) {
           cardsPicked.splice(drawnCard, 1);
+          if (cardsPicked.length == 0) revealButton.attribute('disabled', 'true');
         }
       }
     }
   }
+}
+
+function pickWhiteCard() {
+  pickCard(0);
+}
+function pickYellowCard() {
+  pickCard(1);
+}
+function pickRedCard() {
+  pickCard(2);
+}
+function pickBlackCard() {
+  pickCard(3);
+}
+
+function handleMessage(msg) {
+  console.log(msg);
+  switch (msg) {
+    case 'pickWhite':
+      pickWhiteCard();
+      break;
+    case 'pickYellow':
+      pickYellowCard();
+      break;
+    case 'pickRed':
+      pickRedCard();
+      break;
+    case 'pickBlack':
+      pickBlackCard();
+      break;
+  }
+
 }

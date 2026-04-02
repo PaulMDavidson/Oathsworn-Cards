@@ -109,7 +109,7 @@ function setup() {
   resetDeck(blackCards);
 
   // EITHER: Hardcoded IP connection
-  ws = new WebSocket('ws://192.168.1.11:8080');
+  ws = new WebSocket('ws://192.168.1.3:8080');
   ws.onopen = () => {
     console.log(`Connected`);
     ws.send('Hello Server!');

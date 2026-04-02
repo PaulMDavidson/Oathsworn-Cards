@@ -24,7 +24,6 @@ var redraws = 0;
 const cardFill = ['white', 'yellow', 'red', 'black'];
 const textFill = ['black', 'black', 'black', 'white'];
 
-const peerId = 'cardsapp-da212e35b0b0';
 var peer;
 var conn;
 var clientId;
@@ -122,7 +121,7 @@ function setup() {
   // Networking
 
   // EITHER: Hardcoded IP connection
-  ws = new WebSocket('ws://192.168.1.11:8081');
+  ws = new WebSocket('ws://192.168.1.3:8081');
   ws.onopen = () => {
     console.log(`Connected`);
     ws.send('Hello Server!');

@@ -231,7 +231,7 @@ function draw() {
   } else {
     cardsPicked.forEach((colour, index) => {
       c = color(cardFill[colour]);
-      c.setAlpha(64);
+      //c.setAlpha(192);
       fill(c);
       x = drawStacksXsep * (index % 6) + drawStacksX;
       y = drawnStackY + floor(index / 6) * drawnStackYsep;

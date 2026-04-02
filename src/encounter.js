@@ -225,8 +225,8 @@ function draw() {
     });
     fill('black');
     text(drawTotal, drawStacksXsep * 6 + drawStacksX, drawnStackY + drawnStackYsep, 10, 8);
-    if (miss_count >= 2) text('Miss', drawStacksXsep * 7 + drawStacksX, drawnStackY + drawnStackYsep, 10, 8);
-    if (redraws > 0) text('Redraws '+redraws, 0, drawnStackY + 2 * drawnStackYsep, 100, 8);
+    //if (miss_count >= 2) text('Miss', drawStacksXsep * 7 + drawStacksX, drawnStackY + drawnStackYsep, 10, 8);
+    //if (redraws > 0) text('Redraws '+redraws, 0, drawnStackY + 2 * drawnStackYsep, 100, 8);
 
   } else {
     cardsPicked.forEach((colour, index) => {
@@ -281,7 +281,7 @@ function longClick() {
       if (clickX < drawStacksX + drawStacksXsep * 6) {
         drawnCard = floor((clickX - drawStacksX) / drawStacksXsep) + (floor((clickY - drawnStackY) / drawnStackYsep) * 6);
         if ((drawnCard >= 0) && (drawnCard < cardsDrawn.length)) {
-          redrawCard(drawnCard);
+          //redrawCard(drawnCard);
         }
       }
     }
@@ -300,7 +300,7 @@ function drawCardClick() {
   let clickedCard = floor((clickX - drawStacksX) / drawStacksXsep) + (floor((clickY - drawnStackY) / drawnStackYsep) * 6);
   if ((clickedRow > 3) && (clickX < drawStacksX + drawStacksXsep * 6)) {
     if (cardsRevealed) {
-      drawCrit(clickedCard);
+      //drawCrit(clickedCard);
     } else {
       unpickCard(clickedCard);
     }

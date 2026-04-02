@@ -121,7 +121,7 @@ function setup() {
   // Networking
 
   // EITHER: Hardcoded IP connection
-  ws = new WebSocket('ws://192.168.1.3:8081');
+  ws = new WebSocket('wss://192.168.1.3:8081');
   ws.onopen = () => {
     console.log(`Connected`);
     ws.send('Hello Server!');
